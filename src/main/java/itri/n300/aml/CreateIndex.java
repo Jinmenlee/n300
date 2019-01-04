@@ -2,12 +2,14 @@ package itri.n300.aml;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Scanner;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -77,7 +79,7 @@ public class CreateIndex
 		System.out.println("索引文件完成,共耗時:" + (end.getTime() - start.getTime()) + "毫秒.");
     }
 
-    	/*
+    /*
 	 * 功能:列出WebContent/files目錄下的索所有檔案 參數:無 傳回值:FileModel型態的清單
 	 */
 	public static List<FileModel> extractFile() throws Exception {
@@ -90,7 +92,13 @@ public class CreateIndex
 		File[] allFiles = fileDir.listFiles();
 
 		for (File f : allFiles) {
-			FileModel sf = new FileModel(f.getName(), parserFile(f));
+			boolean isTxt = getFileExtension(f);
+			FileModel sf = null;
+			if (isTxt) {
+				sf = new FileModel(f.getName(), parserTextFile(f));
+			} else {
+				sf = new FileModel(f.getName(), parserFile(f));
+			}
 			list.add(sf);
 		}
 		return list;
@@ -111,5 +119,40 @@ public class CreateIndex
 			fileContent = handler.toString();
 
 		return fileContent;
+	}
+
+	public static String parserTextFile(File path) throws IOException{
+		FileInputStream inputStream = null;
+		Scanner sc = null;
+		try {
+    		inputStream = new FileInputStream(path);
+    		sc = new Scanner(inputStream, "UTF-8");
+    		while (sc.hasNextLine()) {
+        		String line = sc.nextLine();
+        		// System.out.println(line);
+    		}
+    		// note that Scanner suppresses exceptions
+    		if (sc.ioException() != null) {
+        			throw sc.ioException();
+    		}
+		} finally {
+    		if (inputStream != null) {
+        		inputStream.close();
+    		}
+    		if (sc != null) {
+        		sc.close();
+    		}
+		}
+
+		return "";
+	}
+
+	public static boolean getFileExtension(File file) {
+		String name = file.getName();
+		int lastIndexOf = name.lastIndexOf(".");
+		if (lastIndexOf == -1) {
+			return false; // empty extension
+		}
+		return name.substring(lastIndexOf).equalsIgnoreCase("txt");
 	}
 }

@@ -25,6 +25,9 @@ public class App {
       // add option "-m"
       options.addOption("s", true, "search");
 
+      // add option "-f"
+      options.addOption("f", true, "fuzzy search");
+
       //***Parsing Stage***
       //Create a parser
       CommandLineParser parser = new DefaultParser();
@@ -35,19 +38,24 @@ public class App {
 
         //***Interrogation Stage***
         //hasOptions checks if option is present or not
+
+      Date startTime = new Date();
         if(cmd.hasOption("a")) { 
             System.out.println("===============================================");
-           System.out.println("Index content from : " + java.time.LocalTime.now());
-           System.out.println("===============================================");
-           String[] param = {"-index", "indexdir", "-docs", "files"};
-           IndexFiles.main(param);
-           System.out.println("===============================================");
-           System.out.println("     Index stop at : " + java.time.LocalTime.now());
-           System.out.println("===============================================");
+            System.out.println("Index content from : " + java.time.LocalTime.now());
+            System.out.println("===============================================");
+            String[] param = {"-index", "indexdir", "-docs", "files"};
+            IndexFiles.main(param);
+
+            Date endTime = new Date();
+            System.out.println("===============================================");
+            System.out.println("     Index stop at : " + java.time.LocalTime.now());
+            System.out.println("total milliseconds : " + (endTime.getTime() - startTime.getTime()));
+            System.out.println("===============================================");
            
         } else if(cmd.hasOption("s")) {
             System.out.println("===============================================");
-            System.out.println("   Search from : " + java.time.LocalTime.now());
+            System.out.println("       Search from : " + java.time.LocalTime.now());
             System.out.println("===============================================");
             String[] value = cmd.getOptionValues("s");
             List<String> where = new ArrayList<String>();
@@ -57,10 +65,31 @@ public class App {
             }
             String[] param = new String[where.size()];
             where.toArray(param);
-           SearchFiles.main(param);
-           System.out.println("===============================================");
-           System.out.println("Search stop at : " + java.time.LocalTime.now());
-           System.out.println("===============================================");
+            SearchFiles.main(param);
+            Date endTime = new Date();
+            System.out.println("===============================================");
+            System.out.println("    Search stop at : " + java.time.LocalTime.now());
+            System.out.println("total milliseconds : " + (endTime.getTime() - startTime.getTime()));
+            System.out.println("===============================================");
+
+        } else if(cmd.hasOption("f")) {
+            System.out.println("===============================================");
+            System.out.println("   Fuzzy Search from : " + java.time.LocalTime.now());
+            System.out.println("===============================================");
+            String[] value = cmd.getOptionValues("f");
+            List<String> where = new ArrayList<String>();
+            where.add("-query");
+            for(String item : value) {
+                where.add(item);
+            }
+            String[] param = new String[where.size()];
+            where.toArray(param);
+            FuzzySearch.main(param);
+            Date endTime = new Date();
+            System.out.println("===============================================");
+            System.out.println("Fuzzy Search stop at : " + java.time.LocalTime.now());
+            System.out.println("  total milliseconds : " + (endTime.getTime() - startTime.getTime()));
+            System.out.println("===============================================");
 
         } else {
             HelpFormatter formatter = new HelpFormatter();

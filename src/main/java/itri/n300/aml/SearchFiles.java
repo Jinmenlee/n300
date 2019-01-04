@@ -33,7 +33,7 @@ public class SearchFiles {
       }
   
       String index = "indexdir";
-      String field = "contents";
+      String field = "title";
       String queries = null;
       int repeat = 0;
       boolean raw = false;
@@ -133,8 +133,10 @@ public class SearchFiles {
                                        int hitsPerPage, boolean raw, boolean interactive) throws IOException {
    
       // Collect enough docs to show 5 pages
+      System.out.println("query=" + query);
       TopDocs results = searcher.search(query, 5 * hitsPerPage);
       ScoreDoc[] hits = results.scoreDocs;
+      System.out.println("hits=" + hits.length);
       
       int numTotalHits = Math.toIntExact(results.totalHits);
       System.out.println(numTotalHits + " total matching documents");
@@ -163,20 +165,22 @@ public class SearchFiles {
           }
   
           Document doc = searcher.doc(hits[i].doc);
-          String path = doc.get("path");
-          if (path != null) {
-            System.out.println((i+1) + ". " + path);
-            String title = doc.get("title");
-            if (title != null) {
-              System.out.println("   Title: " + doc.get("title"));
-            }
-            String content = doc.get("contents");
-            //if (content != null) {
-                System.out.println("content=" + content);
-            //}
-          } else {
-            System.out.println((i+1) + ". " + "No path for this document");
+          String title = doc.get("title");
+          if (title != null) {
+            System.out.println("   Title: " + doc.get("title"));
           }
+
+          // String path = doc.get("path");
+          // if (path != null) {
+          //   System.out.println((i+1) + ". " + path);
+          //   String title = doc.get("title");
+          //   if (title != null) {
+          //     System.out.println("   Title: " + doc.get("title"));
+          //   }
+
+          // } else {
+          //   System.out.println((i+1) + ". " + "No path for this document");
+          // }
                     
         }
   

@@ -17,6 +17,7 @@ package itri.n300.aml;
  */
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -28,14 +29,17 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Date;
+import java.util.Scanner;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -57,14 +61,14 @@ public class IndexFiles {
                    + " [-index INDEX_PATH] [-docs DOCS_PATH] [-update]\n\n"
                    + "This indexes the documents in DOCS_PATH, creating a Lucene index"
                    + "in INDEX_PATH that can be searched with SearchFiles";
-      String indexPath = "index";
+      String indexPath = "indexdir";
       String docsPath = null;
       boolean create = true;
       for(int i=0;i<args.length;i++) {
         if ("-index".equals(args[i])) {
           indexPath = args[i+1];
           i++;
-        } else if ("-docs".equals(args[i])) {
+        } else if ("-docs".equals(args[i])) {         
           docsPath = args[i+1];
           i++;
         } else if ("-update".equals(args[i])) {
@@ -150,7 +154,8 @@ public class IndexFiles {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
             try {
-              indexDoc(writer, file, attrs.lastModifiedTime().toMillis());
+              // indexDoc(writer, file, attrs.lastModifiedTime().toMillis());
+              indexTextDoc(writer, file, attrs.lastModifiedTime().toMillis());
             } catch (IOException ignore) {
               // don't index files that can't be read.
             }
@@ -158,10 +163,63 @@ public class IndexFiles {
           }
         });
       } else {
-        indexDoc(writer, path, Files.getLastModifiedTime(path).toMillis());
+        // indexDoc(writer, path, Files.getLastModifiedTime(path).toMillis());
+        indexTextDoc(writer, path, Files.getLastModifiedTime(path).toMillis());
       }
     }
   
+    /** Indexes a text document */
+    static void indexTextDoc(IndexWriter writer, Path path, long lastModified) throws IOException {
+      System.out.println("-----------------------------------------------");
+      System.out.println("File name : " + path.getFileName());
+      System.out.println("-----------------------------------------------");
+      FileInputStream inputStream = null;
+      Scanner sc = null;
+      try {
+        FieldType fileType = new FieldType();
+        fileType.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
+        fileType.setStored(true);
+        fileType.setTokenized(true);
+        fileType.setStoreTermVectors(true);
+        fileType.setStoreTermVectorPositions(true);
+        fileType.setStoreTermVectorOffsets(true);
+    
+        inputStream = new FileInputStream(path.toFile());
+        sc = new Scanner(inputStream, "UTF-8");
+        while (sc.hasNextLine()) {
+          String line = sc.nextLine();
+          // System.out.println(line);
+          Document doc = new Document();
+          doc.add(new Field("title", line, fileType));
+            
+          if (writer.getConfig().getOpenMode() == OpenMode.CREATE) {
+            // New index, so we just add the document (no old document can be there):
+            System.out.println("adding " + line);
+            writer.addDocument(doc);
+          } else {
+            // Existing index (an old copy of this document may have been indexed) so 
+            // we use updateDocument instead to replace the old one matching the exact 
+            // path, if present:
+            System.out.println("updating " + line);
+            writer.updateDocument(new Term("path", path.getFileName().toString()), doc);
+          }
+  
+
+        }
+        // note that Scanner suppresses exceptions
+        if (sc.ioException() != null) {
+          throw sc.ioException();
+        }
+      } finally {
+        if (inputStream != null) {
+          inputStream.close();
+        }
+        if (sc != null) {
+          sc.close();
+        }
+      }
+    }
+
     /** Indexes a single document */
     static void indexDoc(IndexWriter writer, Path file, long lastModified) throws IOException {
       try (InputStream stream = Files.newInputStream(file)) {
@@ -176,6 +234,8 @@ public class IndexFiles {
         Field pathField = new StringField("path", file.toString(), Field.Store.YES);
         doc.add(pathField);
         
+        doc.add(new TextField("title", convertStreamToString(stream) , Field.Store.YES));
+
         // Add the last modified date of the file a field named "modified".
         // Use a LongPoint that is indexed (i.e. efficiently filterable with
         // PointRangeQuery).  This indexes to milli-second resolution, which
@@ -204,4 +264,9 @@ public class IndexFiles {
         }
       }
     }  
+
+    public static String convertStreamToString(java.io.InputStream is) {
+      java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
+      return s.hasNext() ? s.next() : "";
+  }
 }

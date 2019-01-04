@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "CodeLens (Launch) - FuzzySearch",
+            "request": "launch",
+            "mainClass": "itri.n300.aml.FuzzySearch",
+            "projectName": "FuzzySearch"
+        },
+        {
+            "type": "java",
             "name": "CodeLens (Launch) - SearchFiles",
             "request": "launch",
             "mainClass": "itri.n300.aml.SearchFiles",
