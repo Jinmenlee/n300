@@ -194,7 +194,8 @@ public class IndexFiles {
             
           if (writer.getConfig().getOpenMode() == OpenMode.CREATE) {
             // New index, so we just add the document (no old document can be there):
-            System.out.println("adding " + line);
+            // System.out.println("adding " + line);
+            System.out.print(".");
             writer.addDocument(doc);
           } else {
             // Existing index (an old copy of this document may have been indexed) so 
@@ -203,9 +204,9 @@ public class IndexFiles {
             System.out.println("updating " + line);
             writer.updateDocument(new Term("path", path.getFileName().toString()), doc);
           }
-  
-
         }
+        System.out.println();
+
         // note that Scanner suppresses exceptions
         if (sc.ioException() != null) {
           throw sc.ioException();

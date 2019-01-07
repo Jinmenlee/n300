@@ -68,9 +68,6 @@ public class SearchFiles {
         }
       }
       
-    //   index = "/Users/n300/aml/n300_aml/test/indexdir";
-    //   queries = index;
-    //   queryString = "wolken";
       IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)));
       IndexSearcher searcher = new IndexSearcher(reader);
       Analyzer analyzer = new StandardAnalyzer();
@@ -169,19 +166,6 @@ public class SearchFiles {
           if (title != null) {
             System.out.println("   Title: " + doc.get("title"));
           }
-
-          // String path = doc.get("path");
-          // if (path != null) {
-          //   System.out.println((i+1) + ". " + path);
-          //   String title = doc.get("title");
-          //   if (title != null) {
-          //     System.out.println("   Title: " + doc.get("title"));
-          //   }
-
-          // } else {
-          //   System.out.println((i+1) + ". " + "No path for this document");
-          // }
-                    
         }
   
         if (!interactive || end == 0) {
